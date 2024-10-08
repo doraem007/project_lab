@@ -1,18 +1,40 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import create_engine, Column, Integer, String, TIMESTAMP, Boolean, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy import create_engine, Column, Integer, String, TIMESTAMP, Boolean, ForeignKey, Float
 from datetime import datetime
+from passlib.context import CryptContext
 
-# เชื่อมต่อกับฐานข้อมูล (เปลี่ยน URL ให้ตรงกับฐานข้อมูลของคุณ)
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 DATABASE_URL = "mysql+pymysql://root:@localhost:3306/just_plug"
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-# กำหนดโมเดลข้อมูล
+class User(Base):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(255), unique=True, nullable=False)
+    password = Column(String(255), nullable=False)
+    create_at = Column(TIMESTAMP, nullable=False, default=datetime.utcnow)
+    
+    details = relationship("UserDetail", back_populates="user", uselist=False)
+    
+class UserDetail(Base):
+    __tablename__ = 'users_details'
+
+    id = Column(Integer, primary_key=True, index=True)
+    users_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    name = Column(String(255), nullable=False)
+    devices_id = Column(Integer, nullable=True)
+
+    user = relationship("User", back_populates="details")
+
+
 class Device(Base):
     __tablename__ = 'devices'
 
@@ -31,7 +53,7 @@ class DeviceLog(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     devices_id = Column(Integer, ForeignKey('devices.id'))
-    value_watt = Column(String(255), nullable=False)
+    power_value = Column(Float, nullable=False)
     log_at = Column(TIMESTAMP, nullable=False, default=datetime.utcnow)
 
     device = relationship("Device", back_populates="logs")
@@ -63,7 +85,7 @@ class DeviceCreate(BaseModel):
 class DeviceLogResponse(BaseModel):
     id: int
     devices_id: int
-    value_watt: str
+    power_value: float
     log_at: str
 
 class DeviceDetailResponse(BaseModel):
@@ -81,6 +103,29 @@ class DeviceResponse(DeviceCreate):
 class DeviceWithLogsAndDetails(DeviceResponse):
     logs: list[DeviceLogResponse] = []
     details: list[DeviceDetailResponse] = []
+    
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    name: str
+    
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    name: str
+    create_at: str
+
+    
+def get_password_hash(password: str):
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, password: str):
+    return pwd_context.verify(plain_password, password)
 
 # Route สำหรับการดึงข้อมูลอุปกรณ์ทั้งหมด
 @app.get("/devices/", response_model=list[DeviceResponse])
@@ -114,7 +159,7 @@ def get_device(device_id: int):
         {
             "id": log.id,
             "devices_id": log.devices_id,
-            "value_watt": log.value_watt,
+            "power_value": log.power_value,
             "log_at": log.log_at.isoformat()
         } for log in device.logs
     ]
@@ -200,3 +245,56 @@ def delete_device(device_id: int):
     db.commit()
     db.close()
     return {"detail": "Device deleted successfully"}
+
+@app.post("/register/", response_model=UserResponse)
+def register(user: UserCreate):
+    db = SessionLocal()
+
+    # Check if the username already exists
+    db_user = db.query(User).filter(User.username == user.username).first()
+    if db_user:
+        db.close()
+        raise HTTPException(status_code=400, detail="Username already registered")
+
+    # Hash the password
+    hashed_password = get_password_hash(user.password)
+    new_user = User(username=user.username, password=hashed_password)
+
+    # Create user details and assign a default devices_id if necessary
+    user_detail = UserDetail(name=user.name, devices_id=None)  # or set to 0 if needed
+    new_user.details = user_detail
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    db.close()
+
+    return {
+        "id": new_user.id,
+        "username": new_user.username,
+        "name": new_user.details.name,
+        "create_at": new_user.create_at.isoformat(),
+    }
+
+@app.post("/login/")
+def login(user: UserLogin):
+    db = SessionLocal()
+    db_user = db.query(User).filter(User.username == user.username).first()
+    
+    if not db_user or not verify_password(user.password, db_user.password):
+        db.close()
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    
+    # If login is successful, return user details
+    user_detail = db_user.details
+    db.close()
+    
+    return {
+        "detail": "Login successful",
+        "user": {
+            "id": db_user.id,
+            "username": db_user.username,
+            "name": user_detail.name if user_detail else None,
+            "create_at": db_user.create_at.isoformat(),
+        }
+    }
