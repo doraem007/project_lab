@@ -144,14 +144,14 @@ class DeviceListItem extends StatelessWidget {
   final String name;
   final String value;
   final bool isConnected;
-  final int id; // เพิ่ม id เพื่อใช้ในการนำทาง
+  final int id;
 
   const DeviceListItem({
     Key? key,
     required this.name,
     required this.value,
     required this.isConnected,
-    required this.id, // เพิ่ม id ที่นี่
+    required this.id,
   }) : super(key: key);
 
   @override
@@ -163,7 +163,7 @@ class DeviceListItem extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (context) => DeviceDetailScreen(
-                deviceId: id), // เปลี่ยนไปใช้หน้าที่คุณสร้างไว้
+                deviceId: id),
           ),
         );
       },
@@ -194,7 +194,7 @@ class DeviceListItem extends StatelessWidget {
                     color: isConnected ? Colors.green : Colors.red,
                     size: 32,
                   ),
-                  SizedBox(width: 16), // ระยะห่างระหว่างไอคอนและปุ่ม Edit
+                  SizedBox(width: 5), // ระยะห่างระหว่างไอคอนและปุ่ม Edit
                   TextButton(
                     onPressed: () {
                       Navigator.push(
