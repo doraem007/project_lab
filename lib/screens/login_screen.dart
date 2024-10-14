@@ -5,6 +5,7 @@ import '../constants.dart';
 import '../components/rounded_button.dart';
 import '../global.dart' as globals;
 import '../services/config_system.dart';
+import '../services/networking.dart';
 
 class LoginScreen extends StatefulWidget {
   static const String id = 'login_screen';
@@ -16,7 +17,6 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   String username = "";
   String password = "";
-  String ip = '';
   bool showSpinner = false;
 
   @override
@@ -24,112 +24,6 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Just Plug'),
-        actions: <Widget>[
-          IconButton(
-              icon: const Icon(Icons.settings),
-              onPressed: () async {
-                if (globals.serverIP == '') {
-                  globals.serverIP = await ConfigSystem.getServer();
-                }
-                await showDialog(
-                    context: context,
-                    builder: (BuildContext context) => AlertDialog(
-                          title: const Text('Config server ip'),
-                          content: Row(
-                            children: <Widget>[
-                              const Icon(
-                                Icons.important_devices,
-                                color: Colors.blue,
-                                size: 50.0,
-                              ),
-                              const SizedBox(
-                                width: 10.0,
-                              ),
-                              Expanded(
-                                child: TextFormField(
-                                  initialValue: globals.serverIP,
-                                  textAlign: TextAlign.center,
-                                  onChanged: (value) {
-                                    //Do something with the user input.
-                                    ip = value;
-                                  },
-                                  decoration: kTextFieldDecoration.copyWith(
-                                      hintText: 'Enter Server IP'),
-                                ),
-                              )
-                            ],
-                          ),
-                          actions: <Widget>[
-                            TextButton(
-                              child: const Text('Save'),
-                              onPressed: () {
-                                globals.serverIP = ip;
-                                ConfigSystem.setServer(globals.serverIP);
-                                Navigator.pop(context);
-                              },
-                            ),
-                            TextButton(
-                                child: const Text('Close'),
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                }),
-                          ],
-                        ));
-              }),
-          IconButton(
-              icon: const Icon(Icons.info),
-              onPressed: () async {
-                await showDialog(
-                    context: context,
-                    builder: (BuildContext context) => AlertDialog(
-                          title: const Text('About developer'),
-                          content: const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Row(
-                                children: <Widget>[
-                                  Icon(
-                                    Icons.account_box,
-                                    color: Colors.blue,
-                                    size: 50.0,
-                                  ),
-                                  SizedBox(
-                                    width: 10.0,
-                                  ),
-                                  Expanded(
-                                    child: Text("Thanawat Phattaraworamet"),
-                                  )
-                                ],
-                              ),
-                              Row(
-                                children: <Widget>[
-                                  Icon(
-                                    Icons.email,
-                                    color: Colors.blue,
-                                    size: 50.0,
-                                  ),
-                                  SizedBox(
-                                    width: 10.0,
-                                  ),
-                                  Expanded(
-                                    child: Text("thanawat.pha@ku.th"),
-                                  )
-                                ],
-                              ),
-                            ],
-                          ),
-                          actions: <Widget>[
-                            TextButton(
-                                child: Text('Close'),
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                }),
-                          ],
-                        ));
-              }),
-        ],
       ),
       backgroundColor: Colors.white,
       body: ModalProgressHUD(
@@ -156,19 +50,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   Icon(
-                    Icons.person,
-                    size: 50.0,
-                    color: Colors.blue.shade800,
+                    Icons.account_circle,
+                    size: 40,
+                    color: const Color.fromARGB(255, 249, 131, 170),
                   ),
                   Expanded(
                     child: TextField(
                       textAlign: TextAlign.center,
                       onChanged: (value) {
-                        //Do something with the user input.
                         username = value;
                       },
                       decoration: kTextFieldDecoration.copyWith(
-                          hintText: 'Enter your username'),
+                        hintText: 'Enter username',
+                      ),
                     ),
                   ),
                 ],
@@ -180,20 +74,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   Icon(
-                    Icons.vpn_key,
-                    size: 50.0,
-                    color: Colors.blue.shade800,
+                    Icons.key,
+                    size: 40.0,
+                    color: const Color.fromARGB(255, 249, 131, 170),
                   ),
                   Expanded(
                     child: TextField(
                       obscureText: true,
                       textAlign: TextAlign.center,
                       onChanged: (value) {
-                        //Do something with the user input.
                         password = value;
                       },
                       decoration: kTextFieldDecoration.copyWith(
-                          hintText: 'Enter your password'),
+                        hintText: 'Enter password',
+                      ),
                     ),
                   ),
                 ],
@@ -203,55 +97,96 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               RoundedButton(
                 title: 'Login',
-                colour: Colors.blue.shade800,
+                colour: const Color.fromARGB(255, 126, 194, 97),
                 onPressed: () async {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => MainScreen()));
-                  // setState(() {
-                  //   showSpinner = true;
-                  // });
-                  // globals.username = username;
-                  // //call web service check user password
-                  // NetworkHelper networkHelper = NetworkHelper(
-                  //     'login?Username=$username&Password=$password');
-                  // var json = await networkHelper.getData();
-                  // if (json == null) {
-                  //   await showDialog(
-                  //       context: context,
-                  //       builder: (BuildContext context) => AlertDialog(
-                  //             title: const Text('Error'),
-                  //             content: Text(
-                  //                 'Can not connect server: ${globals.serverIP}'),
-                  //             actions: <Widget>[
-                  //               TextButton(
-                  //                   child: const Text('Close'),
-                  //                   onPressed: () {
-                  //                     Navigator.pop(context);
-                  //                   }),
-                  //             ],
-                  //           ));
-                  // } else if (json['error'] == false) {
-                  //   globals.memberID = json["user"]["id"];
-                  //   Navigator.push(context,
-                  //       MaterialPageRoute(builder: (context) => MainScreen()));
-                  // } else {
-                  //   await showDialog(
-                  //       context: context,
-                  //       builder: (BuildContext context) => AlertDialog(
-                  //             title: const Text('Error'),
-                  //             content: const Text('Incorrect username or password'),
-                  //             actions: <Widget>[
-                  //               TextButton(
-                  //                   child: const Text('Close'),
-                  //                   onPressed: () {
-                  //                     Navigator.pop(context);
-                  //                   }),
-                  //             ],
-                  //           ));
-                  // }
-                  // setState(() {
-                  //   showSpinner = false;
-                  // });
+                  // Start spinner
+                  setState(() {
+                    showSpinner = true;
+                  });
+
+                  // Validate input fields
+                  if (username.isEmpty || password.isEmpty) {
+                    setState(() {
+                      showSpinner = false; // Stop spinner if validation fails
+                    });
+                    await showDialog(
+                      context: context,
+                      builder: (BuildContext context) => AlertDialog(
+                        title: const Text('Error'),
+                        content: const Text(
+                            'Username and password cannot be empty.'),
+                        actions: <Widget>[
+                          TextButton(
+                            child: const Text('Close'),
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                    return; // Exit early
+                  }
+
+                  try {
+                    globals.username = username;
+                    NetworkHelper networkHelper = NetworkHelper('login');
+                    var json = await networkHelper.postData({
+                      "username": username,
+                      "password": password,
+                    });
+
+                    // Check if json is null (connection issue)
+                    if (json == null) {
+                      await showDialog(
+                        context: context,
+                        builder: (BuildContext context) => AlertDialog(
+                          title: const Text('Error'),
+                          content: Text(
+                              'Cannot connect to server: ${globals.serverIP}'),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('Close'),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    } else if (json['detail'] == 'Login successful') {
+                      // Successful login
+                      globals.memberID = json["user"]["id"];
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => MainScreen()),
+                      );
+                    } else {
+                      // Handle incorrect username or password
+                      await showDialog(
+                        context: context,
+                        builder: (BuildContext context) => AlertDialog(
+                          title: const Text('Error'),
+                          content: const Text('Incorrect username or password'),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('Close'),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    print('An unexpected error occurred: $e');
+                  } finally {
+                    // Stop spinner regardless of success or failure
+                    setState(() {
+                      showSpinner = false;
+                    });
+                  }
                 },
               ),
             ],

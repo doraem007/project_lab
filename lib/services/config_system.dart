@@ -10,8 +10,8 @@ class ConfigSystem {
       return text;
     } catch (e) {
       print("New File");
-      setServer('10.0.2.2');
-      return '10.0.2.2';
+      setServer('plugapi.nareubad.work');
+      return 'plugapi.nareubad.work';
     }
   }
 

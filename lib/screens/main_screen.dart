@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'device_list_screen.dart';
 import 'log_device_screen.dart';
+import '../global.dart' as globals;
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -27,6 +28,8 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print("Current Username: ${globals.username}");
+    print("Current memberID: ${globals.memberID}");
     return Scaffold(
       appBar: AppBar(
         title: const Text('Just Plug'),

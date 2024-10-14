@@ -17,14 +17,15 @@ class DeviceListScreen extends StatefulWidget {
 class _DeviceListScreenState extends State<DeviceListScreen> {
   List<dynamic> devices = [];
   Timer? _timer; // Declare a Timer
+  int memberId = globals.memberID; // Assuming you store the userId in globals
 
   @override
   void initState() {
     super.initState();
-    fetchDevices();
+    fetchDevices(memberId); // Fetch devices for the specified memberId
     // Start the timer to fetch devices every 5 seconds
-    _timer = Timer.periodic(Duration(seconds: 5), (Timer t) {
-      fetchDevices();
+    _timer = Timer.periodic(Duration(seconds: 2), (Timer t) {
+      fetchDevices(memberId);
     });
   }
 
@@ -34,9 +35,9 @@ class _DeviceListScreenState extends State<DeviceListScreen> {
     super.dispose();
   }
 
-  Future<void> fetchDevices() async {
+  Future<void> fetchDevices(int memberId) async {
     NetworkHelper networkHelper =
-        NetworkHelper('devices'); // Adjust the endpoint as needed
+        NetworkHelper('user/$memberId'); // Adjust the endpoint as needed
 
     try {
       var data = await networkHelper.getData();
@@ -80,15 +81,9 @@ class DeviceList extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Welcom',
+                'Welcome', // Fixed the typo from 'Welcom' to 'Welcome'
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              // ToDo wellcom fetch data from api
-              // Text(
-              //       'Watt : $value', // แสดงค่า Value พร้อมข้อความ
-              //       style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-              //     ),
-
               Column(
                 children: [
                   ElevatedButton(
@@ -96,20 +91,18 @@ class DeviceList extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) =>
-                                AddDeviceScreen()), // ใช้ MaterialPageRoute
+                            builder: (context) => AddDeviceScreen()),
                       );
                     },
                     child: Text('Add Device'),
                   ),
-                  SizedBox(height: 8), // ระยะห่างระหว่างปุ่ม
+                  SizedBox(height: 8),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) =>
-                                ShareDeviceScreen()), // ใช้ MaterialPageRoute
+                            builder: (context) => ShareDeviceScreen()),
                       );
                     },
                     child: Text('Share'),
@@ -127,9 +120,8 @@ class DeviceList extends StatelessWidget {
                 return DeviceListItem(
                   name: device['device_name'],
                   value: device['current_value'].toString(),
-                  isConnected: device['device_status'] ==
-                      true, // Check boolean value directly
-                  id: device['id'], // เพิ่ม id ที่นี่
+                  isConnected: device['device_status'] == true,
+                  id: device['id'],
                 );
               },
             ),
@@ -158,12 +150,10 @@ class DeviceListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        // นำทางไปยังหน้ารายละเอียดโดยส่ง id
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => DeviceDetailScreen(
-                deviceId: id),
+            builder: (context) => DeviceDetailScreen(deviceId: id),
           ),
         );
       },
@@ -178,11 +168,11 @@ class DeviceListItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    name, // แสดงชื่ออุปกรณ์
+                    name,
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    'Watt : $value', // แสดงค่า Value พร้อมข้อความ
+                    'Watt: $value',
                     style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   ),
                 ],
@@ -194,15 +184,15 @@ class DeviceListItem extends StatelessWidget {
                     color: isConnected ? Colors.green : Colors.red,
                     size: 32,
                   ),
-                  SizedBox(width: 5), // ระยะห่างระหว่างไอคอนและปุ่ม Edit
+                  SizedBox(width: 5),
                   TextButton(
                     onPressed: () {
                       Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EditDeviceScreen(
-                                deviceId: id), // เปลี่ยนไปใช้หน้าที่คุณสร้างไว้
-                          ));
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditDeviceScreen(deviceId: id),
+                        ),
+                      );
                     },
                     child: Text('Edit'),
                   ),
