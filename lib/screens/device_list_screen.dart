@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../global.dart' as globals;
 import '../services/networking.dart';
 import 'dart:async';
 import 'device_detail_screen.dart';
 import 'add_device_screen.dart';
-import 'share_device-screen.dart';
+import 'share_device_screen.dart';
 import 'edit_device_screen.dart';
 
 class DeviceListScreen extends StatefulWidget {
@@ -16,44 +14,44 @@ class DeviceListScreen extends StatefulWidget {
 
 class _DeviceListScreenState extends State<DeviceListScreen> {
   List<dynamic> devices = [];
-  Timer? _timer; // Declare a Timer
-  int memberId = globals.memberID; // Assuming you store the userId in globals
+  Timer? _timer; // ประกาศ Timer
+  int memberId = globals.memberID; // สมมติว่าคุณเก็บ userId ไว้ใน globals
 
   @override
   void initState() {
     super.initState();
-    fetchDevices(memberId); // Fetch devices for the specified memberId
-    // Start the timer to fetch devices every 5 seconds
-    _timer = Timer.periodic(Duration(seconds: 2), (Timer t) {
+    fetchDevices(memberId); // ดึงอุปกรณ์สำหรับ memberId ที่ระบุ
+    // เริ่มต้น Timer เพื่อดึงอุปกรณ์ทุก ๆ 5 วินาที
+    _timer = Timer.periodic(Duration(seconds: 5), (Timer t) {
       fetchDevices(memberId);
     });
   }
 
   @override
   void dispose() {
-    _timer?.cancel(); // Cancel the timer when the widget is disposed
+    _timer?.cancel(); // ยกเลิก Timer เมื่อ Widget ถูกกำจัด
     super.dispose();
   }
 
   Future<void> fetchDevices(int memberId) async {
-    NetworkHelper networkHelper =
-        NetworkHelper('user/$memberId'); // Adjust the endpoint as needed
+    NetworkHelper networkHelper = NetworkHelper('user/$memberId'); // ปรับ endpoint ตามที่จำเป็น
 
     try {
-      var data = await networkHelper.getData();
+      var response = await networkHelper.getData();
 
-      if (data != null) {
+      // ตรวจสอบว่าการตอบสนองเป็น Map และมีคีย์ devices
+      if (response is Map<String, dynamic> && response['devices'] is List) {
         setState(() {
-          devices = data; // Assuming the data is a list of devices
+          devices = response['devices']; // เข้าถึงรายการอุปกรณ์จาก response map
           print(devices);
         });
       } else {
-        // Handle case where data is null
-        print('Failed to load devices');
+        // จัดการกรณีที่ข้อมูลอุปกรณ์เป็น null หรือไม่ใช่รายการ
+        print('ไม่สามารถโหลดอุปกรณ์หรือไม่พบอุปกรณ์');
       }
     } catch (e) {
-      // Handle error here (e.g., show a Snackbar or alert dialog)
-      print(e);
+      // จัดการข้อผิดพลาดที่นี่ (เช่น แสดง Snackbar หรือ Alert Dialog)
+      print('ข้อผิดพลาดในการดึงอุปกรณ์: $e');
     }
   }
 
@@ -81,7 +79,7 @@ class DeviceList extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Welcome', // Fixed the typo from 'Welcom' to 'Welcome'
+                'ยินดีต้อนรับ', // "Welcome" in Thai
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               Column(
@@ -94,7 +92,10 @@ class DeviceList extends StatelessWidget {
                             builder: (context) => AddDeviceScreen()),
                       );
                     },
-                    child: Text('Add Device'),
+                    child: Text('เพิ่มอุปกรณ์'), // "Add Device" in Thai
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.pinkAccent, // Updated
+                    ),
                   ),
                   SizedBox(height: 8),
                   ElevatedButton(
@@ -105,7 +106,10 @@ class DeviceList extends StatelessWidget {
                             builder: (context) => ShareDeviceScreen()),
                       );
                     },
-                    child: Text('Share'),
+                    child: Text('แชร์'), // "Share" in Thai
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.pinkAccent, // Updated
+                    ),
                   ),
                 ],
               ),
@@ -194,7 +198,7 @@ class DeviceListItem extends StatelessWidget {
                         ),
                       );
                     },
-                    child: Text('Edit'),
+                    child: Text('แก้ไข'), // "Edit" in Thai
                   ),
                 ],
               ),

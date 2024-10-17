@@ -4,8 +4,8 @@ import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import '../constants.dart';
 import '../components/rounded_button.dart';
 import '../global.dart' as globals;
-import '../services/config_system.dart';
 import '../services/networking.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   static const String id = 'login_screen';
@@ -22,10 +22,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Just Plug'),
-      ),
-      backgroundColor: Colors.white,
       body: ModalProgressHUD(
         inAsyncCall: showSpinner,
         child: Padding(
@@ -99,15 +95,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 title: 'Login',
                 colour: const Color.fromARGB(255, 126, 194, 97),
                 onPressed: () async {
-                  // Start spinner
                   setState(() {
                     showSpinner = true;
                   });
 
-                  // Validate input fields
                   if (username.isEmpty || password.isEmpty) {
                     setState(() {
-                      showSpinner = false; // Stop spinner if validation fails
+                      showSpinner = false;
                     });
                     await showDialog(
                       context: context,
@@ -125,18 +119,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                     );
-                    return; // Exit early
+                    return;
                   }
 
                   try {
                     globals.username = username;
-                    NetworkHelper networkHelper = NetworkHelper('login');
+                    NetworkHelper networkHelper = NetworkHelper('login/');
                     var json = await networkHelper.postData({
                       "username": username,
                       "password": password,
                     });
 
-                    // Check if json is null (connection issue)
                     if (json == null) {
                       await showDialog(
                         context: context,
@@ -155,14 +148,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       );
                     } else if (json['detail'] == 'Login successful') {
-                      // Successful login
-                      globals.memberID = json["user"]["id"];
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => MainScreen()),
-                      );
+                      globals.memberID = json["id"]; // Store the member ID
+                      globals.username = json["username"]; // Store the username
+                      // globals.isLoggedIn = true; // Update login status
+
+                      Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MainScreen() // Use named parameter
+                    ),
+                  );
                     } else {
-                      // Handle incorrect username or password
                       await showDialog(
                         context: context,
                         builder: (BuildContext context) => AlertDialog(
@@ -182,11 +178,30 @@ class _LoginScreenState extends State<LoginScreen> {
                   } catch (e) {
                     print('An unexpected error occurred: $e');
                   } finally {
-                    // Stop spinner regardless of success or failure
                     setState(() {
                       showSpinner = false;
                     });
                   }
+                },
+              ),
+              RoundedButton(
+                title: 'Register',
+                colour: const Color.fromARGB(255, 126, 194, 97),
+                onPressed: () async {
+                  setState(() {
+                    showSpinner = true;
+                  });
+
+                  // Reset spinner before navigating to the RegisterScreen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => RegisterScreen()),
+                  ).then((_) {
+                    setState(() {
+                      showSpinner =
+                          false; // Stop spinner when back to login screen
+                    });
+                  });
                 },
               ),
             ],
